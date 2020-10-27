@@ -8,7 +8,7 @@ import sys
 import click
 from dotenv import load_dotenv
 
-from inijira.inijira import convert
+from inijira.inijira import tocsv, toticket
 
 # if dotenv file, load it
 dotenv_path = os.environ.get("INIJIRA_DOTENV_PATH", None)
@@ -21,14 +21,59 @@ if dotenv_path:
 @click.option(
     "--doc",
     default="-",
-    help="confluence html export file path",
+    help="confluence html export file path, mutually exclusive from --docdir",
 )
-def cli(doc):
-    with _smart_open(doc) as handle:
-        content = handle.read()
+@click.option(
+    "--docdir",
+    help="folder with confluence html export files, mutually exclusive from --doc",
+)
+def cli(doc, docdir=None):
+    result = []
+    if docdir:
+        if os.path.isdir(docdir):
+            files = os.listdir(docdir)
 
-    result = convert(content)
-    click.echo(result)
+            for f in files:
+                path = os.path.join(docdir, f)
+                if os.path.isfile(path):
+                    row = process_single_doc(path)
+                    if row:
+                        result.append(row)
+                else:
+                    click.echo("NOT a file? {}".format(path))
+        else:
+            print_error("arg docdir({}) is not a dir!".format(docdir))
+            exit(1)
+    else:
+        row = process_single_doc(doc)
+        result.append(row)
+
+    # sort result by description
+    ordered = sorted(result, key=lambda x: x.get("description", "00 00 00"))
+    for item in ordered:
+        if item:
+            """
+            click.echo("{} *** {}".format(
+                item.get("who", "...."),
+                item.get("description", "----"),
+                item.get("assignee", "++++"),
+                item.get("component", "----"),
+            ))
+            """
+
+    line_list = tocsv(ordered, ",")
+    click.echo(line_list)
+
+
+def process_single_doc(doc_path):
+    with _smart_open(doc_path) as handle:
+        content = handle.read()
+    result = toticket(content)
+    return result
+
+
+def print_error(msg=""):
+    click.echo("ERROR: {}".format(msg))
 
 
 # from http://stackoverflow.com/a/29824059
