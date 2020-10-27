@@ -2,14 +2,13 @@
 
 """Console script for hxann."""
 import contextlib
-import sys
-import click
-
-from dotenv import load_dotenv
 import os
+import sys
+
+import click
+from dotenv import load_dotenv
 
 from inijira.inijira import convert
-
 
 # if dotenv file, load it
 dotenv_path = os.environ.get("INIJIRA_DOTENV_PATH", None)
