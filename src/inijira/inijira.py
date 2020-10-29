@@ -97,9 +97,9 @@ def toticket(html_doc):
 def tocsv(tickets, separator="\t"):
     result = separator.join(
         [
+            "component",
             "reporter",
             "assignee",
-            "component",
             "description",
             "\n",
         ]
@@ -107,9 +107,9 @@ def tocsv(tickets, separator="\t"):
     for t in tickets:
         line = separator.join(
             [
+                t["component"],
                 t["author"],
                 t["who"],
-                t["component"],
                 t["description"],
                 "\n",
             ]
